@@ -32,6 +32,44 @@ function generateSigilId() {
   return `SGL-${year}-${rand}`
 }
 
+async function sanitiseMusicPrompt(description) {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+  const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true })
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{
+      role: 'user',
+      content: `From the following track description, extract only the genre, mood, tempo, and sonic style. Remove all specific artist names. Return only the cleaned description, no commentary.\n\nDescription: "${description}"`,
+    }],
+    temperature: 0,
+  })
+  return response.choices[0].message.content.trim()
+}
+
+async function generateMusic(description) {
+  const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
+  if (!apiKey) throw new Error('VITE_ELEVENLABS_API_KEY is not set.')
+
+  const sanitised = await sanitiseMusicPrompt(description)
+
+  const response = await fetch('https://api.elevenlabs.io/v1/music/compose', {
+    method: 'POST',
+    headers: {
+      'xi-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt: sanitised }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`ElevenLabs error: ${response.status} — ${text}`)
+  }
+
+  const blob = await response.blob()
+  return URL.createObjectURL(blob)
+}
+
 async function analyseTrack(description) {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY
   if (!apiKey) throw new Error('VITE_OPENAI_API_KEY is not set.')
@@ -67,23 +105,29 @@ Respond with ONLY the raw JSON object, no markdown, no code fences, no commentar
 
 export default function App() {
   const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loadingPhase, setLoadingPhase] = useState(null) // 'generating' | 'analysing'
+  const [audioUrl, setAudioUrl] = useState(null)
   const [result, setResult] = useState(null)
   const [sigilId] = useState(generateSigilId)
   const [error, setError] = useState(null)
 
   async function handleAnalyse() {
     if (!description.trim()) return
-    setLoading(true)
+    setLoadingPhase('analysing')
     setResult(null)
+    setAudioUrl(null)
     setError(null)
     try {
       const data = await analyseTrack(description.trim())
       setResult(data)
+      if (data.consent_status === 'RED') return
+      setLoadingPhase('generating')
+      const url = await generateMusic(description.trim())
+      setAudioUrl(url)
     } catch (err) {
-      setError(err.message || 'Analysis failed. Please try again.')
+      setError(err.message || 'Something failed. Please try again.')
     } finally {
-      setLoading(false)
+      setLoadingPhase(null)
     }
   }
 
@@ -93,6 +137,7 @@ export default function App() {
     }
   }
 
+  const loading = loadingPhase !== null
   const status = result ? STATUS_CONFIG[result.consent_status] : null
 
   return (
@@ -131,11 +176,10 @@ export default function App() {
               onClick={handleAnalyse}
               disabled={loading || !description.trim()}
             >
-              {loading ? (
-                <span className="btn-inner">
-                  <Spinner />
-                  Analysing
-                </span>
+              {loadingPhase === 'analysing' ? (
+                <span className="btn-inner"><Spinner />Analysing</span>
+              ) : loadingPhase === 'generating' ? (
+                <span className="btn-inner"><Spinner />Generating track…</span>
               ) : (
                 'Analyse & Generate Sigil'
               )}
@@ -216,6 +260,14 @@ export default function App() {
                   </div>
                 </ResultCard>
               </div>
+
+              {audioUrl && (
+                <div className="result-grid" style={{ marginTop: '1rem' }}>
+                  <ResultCard title="Generated Track" fullWidth>
+                    <audio controls src={audioUrl} style={{ width: '100%' }} />
+                  </ResultCard>
+                </div>
+              )}
             </section>
           )}
         </div>
