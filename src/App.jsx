@@ -81,7 +81,7 @@ async function analyseTrack(description) {
 
   const prompt = `You are a music consent and attribution analysis engine for an AI-generated music platform called Sigil. Analyse the following track description and return a JSON object with these exact fields:
 
-- ai_percentage: integer 0–100 representing the estimated proportion of the track that is AI-generated, scored against the UK Copyright, Designs and Patents Act 1988 including its fair dealing provisions and artist voice and likeness rights
+- ai_percentage: integer 0–100 measuring ONLY the proportion of AI generation versus human creative input. Score higher when the description references specific named artists (because the creator is relying on AI to replicate a known style rather than contributing original human creativity). Score lower for generic genre or mood descriptions that reflect human creative intent. This field is independent of legal risk — it measures creative origin only
 - influence_chain: array of 3–6 strings naming specific artists, genres, or sample sources detected as influences
 - consent_status: one of "GREEN", "AMBER", or "RED", determined by scoring against the UK Copyright, Designs and Patents Act 1988, including fair dealing provisions and artist voice and likeness rights
   - GREEN = no consent issues detected, fully clear for export
