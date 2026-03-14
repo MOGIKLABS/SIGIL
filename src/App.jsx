@@ -33,12 +33,11 @@ function generateSigilId() {
 }
 
 async function analyseTrack(description) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  if (!apiKey) throw new Error('VITE_GROQ_API_KEY is not set.')
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+  if (!apiKey) throw new Error('VITE_OPENAI_API_KEY is not set.')
 
   const client = new OpenAI({
     apiKey,
-    baseURL: 'https://api.groq.com/openai/v1',
     dangerouslyAllowBrowser: true,
   })
 
@@ -57,7 +56,7 @@ Track description: "${description}"
 Respond with ONLY the raw JSON object, no markdown, no code fences, no commentary.`
 
   const response = await client.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.3,
   })
