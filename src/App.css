@@ -376,6 +376,15 @@
   max-width: 480px;
 }
 
+.legal-basis {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9ca3af;
+  margin: 6px 0 0;
+  line-height: 1.5;
+  max-width: 480px;
+}
+
 /* ─── Footer ─────────────────────────────────────────────── */
 
 .footer {

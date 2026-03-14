@@ -81,13 +81,14 @@ async function analyseTrack(description) {
 
   const prompt = `You are a music consent and attribution analysis engine for an AI-generated music platform called Sigil. Analyse the following track description and return a JSON object with these exact fields:
 
-- ai_percentage: integer 0–100 representing the estimated proportion of the track that is AI-generated
+- ai_percentage: integer 0–100 representing the estimated proportion of the track that is AI-generated, scored against the UK Copyright, Designs and Patents Act 1988 including its fair dealing provisions and artist voice and likeness rights
 - influence_chain: array of 3–6 strings naming specific artists, genres, or sample sources detected as influences
-- consent_status: one of "GREEN", "AMBER", or "RED"
+- consent_status: one of "GREEN", "AMBER", or "RED", determined by scoring against the UK Copyright, Designs and Patents Act 1988, including fair dealing provisions and artist voice and likeness rights
   - GREEN = no consent issues detected, fully clear for export
-  - AMBER = some potential consent or attribution concerns that should be reviewed
-  - RED = clear consent or copyright issues present that must be resolved before export
+  - AMBER = potential consent or attribution concerns that should be reviewed
+  - RED = clear consent or copyright issues that must be resolved before export
 - consent_reason: one concise sentence (max 20 words) explaining the consent_status verdict
+- legal_basis: one concise sentence citing the specific provision of the UK CDPA 1988 (e.g. s.29 research, s.30 criticism/review, s.30A quotation, voice and likeness rights) that most directly applies
 
 Track description: "${description}"
 
@@ -256,6 +257,9 @@ export default function App() {
                         {status.label}
                       </div>
                       <p className="consent-reason">{result.consent_reason}</p>
+                      {result.legal_basis && (
+                        <p className="legal-basis"><strong>Legal basis:</strong> {result.legal_basis}</p>
+                      )}
                     </div>
                   </div>
                 </ResultCard>
