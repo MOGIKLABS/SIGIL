@@ -145,11 +145,11 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="header-inner">
-          <div className="wordmark">
-            <img src="/THP.png" alt="Sigil" className="wordmark-logo" />
-            <span className="wordmark-powered">powered by Mogik Labs</span>
-          </div>
-          <p className="tagline">Consent & Attribution for AI-Generated Music</p>
+          <img src="/THP.png" alt="THP mark" className="wordmark-logo" />
+          <p className="wordmark-powered">powered by Mogik Labs</p>
+          <h1 className="sigil-wordmark">Sigil</h1>
+          <p className="tagline">Making sure your creations are aligned with the law — in the age of AI music.</p>
+          <p className="tagline-sub">Sigil sits at the exit of every AI music platform — issuing a traceable ID that records how much AI was used, what it was trained on, and whether it's legal to release.</p>
         </div>
       </header>
 
@@ -173,7 +173,7 @@ export default function App() {
             <p className="input-hint">Press Cmd+Enter to analyse</p>
 
             <button
-              className={`analyse-btn ${loading ? 'loading' : ''}`}
+              className="btn"
               onClick={handleAnalyse}
               disabled={loading || !description.trim()}
             >
@@ -182,7 +182,7 @@ export default function App() {
               ) : loadingPhase === 'generating' ? (
                 <span className="btn-inner"><Spinner />Generating track…</span>
               ) : (
-                'Analyse & Generate Sigil'
+                'Analyse & Generate Sigil ID'
               )}
             </button>
           </section>
@@ -237,10 +237,7 @@ export default function App() {
                           style={{
                             background: result.consent_status === s
                               ? STATUS_CONFIG[s].dot
-                              : '#d1d5db',
-                            boxShadow: result.consent_status === s
-                              ? `0 0 16px 4px ${STATUS_CONFIG[s].dot}66`
-                              : 'none',
+                              : '#e8e8e8',
                           }}
                         />
                       ))}
@@ -248,11 +245,7 @@ export default function App() {
                     <div className="consent-text">
                       <div
                         className="consent-verdict"
-                        style={{
-                          background: status.bg,
-                          border: `1.5px solid ${status.border}`,
-                          color: status.color,
-                        }}
+                        style={{ borderLeft: `4px solid ${status.dot}` }}
                       >
                         {status.label}
                       </div>
