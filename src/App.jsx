@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import OpenAI from 'openai'
 import './App.css'
 
@@ -42,6 +42,21 @@ async function sanitiseMusicPrompt(description) {
       content: `From the following track description, extract only the genre, mood, tempo, and sonic style. Remove all specific artist names. Return only the cleaned description, no commentary.\n\nDescription: "${description}"`,
     }],
     temperature: 0,
+  })
+  return response.choices[0].message.content.trim()
+}
+
+async function sanitisePromptForExport(description) {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+  if (!apiKey) throw new Error('VITE_OPENAI_API_KEY is not set.')
+  const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true })
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{
+      role: 'user',
+      content: `Rewrite this music generation prompt to remove any specific artist names, copyrighted entities or protected likenesses, but keep the exact same musical style, genre, instruments, tempo and vibe. Return only the rewritten prompt, nothing else.\n\n${description}`,
+    }],
+    temperature: 0.3,
   })
   return response.choices[0].message.content.trim()
 }
@@ -112,22 +127,42 @@ export default function App() {
   const [sigilId] = useState(generateSigilId)
   const [error, setError] = useState(null)
 
-  async function handleAnalyse() {
-    if (!description.trim()) return
+  async function runAnalysis(prompt) {
     setLoadingPhase('analysing')
     setResult(null)
     setAudioUrl(null)
     setError(null)
     try {
-      const data = await analyseTrack(description.trim())
+      const data = await analyseTrack(prompt)
       setResult(data)
       if (data.consent_status === 'RED') return
       setLoadingPhase('generating')
-      const url = await generateMusic(description.trim())
+      const url = await generateMusic(prompt)
       setAudioUrl(url)
     } catch (err) {
       setError(err.message || 'Something failed. Please try again.')
     } finally {
+      setLoadingPhase(null)
+    }
+  }
+
+  async function handleAnalyse() {
+    if (!description.trim()) return
+    await runAnalysis(description.trim())
+  }
+
+  async function handleSanitise() {
+    if (!description.trim()) return
+    setLoadingPhase('sanitising')
+    setResult(null)
+    setAudioUrl(null)
+    setError(null)
+    try {
+      const sanitised = await sanitisePromptForExport(description.trim())
+      setDescription(sanitised)
+      await runAnalysis(sanitised)
+    } catch (err) {
+      setError(err.message || 'Something failed. Please try again.')
       setLoadingPhase(null)
     }
   }
@@ -145,8 +180,7 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="header-inner">
-          <img src="/THP.png" alt="THP mark" className="wordmark-logo" />
-          <p className="wordmark-powered">powered by Mogik Labs</p>
+          <img src="/THP.png" alt="THP mark" className="wordmark-logo" style={{ height: '280px', width: 'auto', display: 'block', margin: '0 auto' }} />
           <h1 className="sigil-wordmark">Sigil</h1>
           <p className="tagline">Making sure your creations are aligned with the law — in the age of AI music.</p>
           <p className="tagline-sub">Sigil sits at the exit of every AI music platform — issuing a traceable ID that records how much AI was used, what it was trained on, and whether it's legal to release.</p>
@@ -177,14 +211,34 @@ export default function App() {
               onClick={handleAnalyse}
               disabled={loading || !description.trim()}
             >
-              {loadingPhase === 'analysing' ? (
-                <span className="btn-inner"><Spinner />Analysing</span>
-              ) : loadingPhase === 'generating' ? (
-                <span className="btn-inner"><Spinner />Generating track…</span>
-              ) : (
-                'Analyse & Generate Sigil ID'
-              )}
+              {loadingPhase === 'analysing' ? 'Analysing…'
+                : loadingPhase === 'generating' ? 'Generating track…'
+                : 'Analyse & Generate Sigil ID'}
             </button>
+
+            {loadingPhase === 'sanitising' && (
+              <Terminal lines={[
+                'Sanitising prompt...',
+                'Removing artist names and protected likenesses...',
+                'Preserving style, genre and vibe...',
+                'Rewriting prompt...',
+              ]} />
+            )}
+            {loadingPhase === 'analysing' && (
+              <Terminal lines={[
+                'Analysing prompt against CDPA 1988...',
+                'Scanning influence chain...',
+                'Calculating AI percentage...',
+                'Minting Sigil ID...',
+              ]} />
+            )}
+            {loadingPhase === 'generating' && (
+              <Terminal lines={[
+                'Routing to ElevenLabs Audio Engine...',
+                'Synthesizing stems...',
+                'Generating track...',
+              ]} />
+            )}
           </section>
 
           {error && (
@@ -253,6 +307,19 @@ export default function App() {
                       {result.legal_basis && (
                         <p className="legal-basis"><strong>Legal basis:</strong> {result.legal_basis}</p>
                       )}
+                      {result.consent_status === 'AMBER' && (
+                        <div className="amber-actions">
+                          <button className="amber-btn-outline">Proceed at Own Risk</button>
+                          <button className="amber-btn-outline" onClick={() => {
+                            setDescription('')
+                            setResult(null)
+                            setAudioUrl(null)
+                            document.getElementById('track-description').scrollIntoView({ behavior: 'smooth' })
+                            setTimeout(() => document.getElementById('track-description').focus(), 400)
+                          }}>Revise Prompt</button>
+                          <button className="amber-btn-solid" onClick={handleSanitise}>Sanitise Prompt</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </ResultCard>
@@ -286,10 +353,25 @@ function ResultCard({ title, children, fullWidth }) {
   )
 }
 
-function Spinner() {
+function Terminal({ lines }) {
+  const [visible, setVisible] = useState(1)
+
+  useEffect(() => {
+    setVisible(1)
+    const timers = lines.slice(1).map((_, i) =>
+      setTimeout(() => setVisible(v => v + 1), (i + 1) * 600)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [lines])
+
   return (
-    <svg className="spinner" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="31.4" strokeDashoffset="10" />
-    </svg>
+    <div className="terminal">
+      {lines.slice(0, visible).map((line, i) => (
+        <div key={i} className="terminal-line">
+          <span className="terminal-prompt">&gt;</span> {line}
+        </div>
+      ))}
+      <span className="terminal-cursor">█</span>
+    </div>
   )
 }
