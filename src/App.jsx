@@ -183,7 +183,7 @@ export default function App() {
           <img src="/THP.png" alt="THP mark" className="wordmark-logo" style={{ height: '280px', width: 'auto', display: 'block', margin: '0 auto' }} />
           <h1 className="sigil-wordmark">Sigil</h1>
           <p className="tagline">Making sure your creations are aligned with the law — in the age of AI music.</p>
-          <p className="tagline-sub">Sigil sits at the exit of every AI music platform — issuing a traceable ID that records how much AI was used, what it was trained on, and whether it's legal to release.</p>
+          <p className="tagline-sub">Sigil is the consent and attribution layer that should exist inside every AI music platform — but doesn't yet.</p>
         </div>
       </header>
 
