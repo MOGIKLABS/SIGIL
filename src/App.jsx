@@ -182,8 +182,7 @@ export default function App() {
         <div className="header-inner">
           <img src="/THP.png" alt="THP mark" className="wordmark-logo" style={{ height: '280px', width: 'auto', display: 'block', margin: '0 auto' }} />
           <h1 className="sigil-wordmark">Sigil</h1>
-          <p className="tagline">Making sure your creations are aligned with the law — in the age of AI music.</p>
-          <p className="tagline-sub">Sigil is the consent and attribution layer that should exist inside every AI music platform — but doesn't yet.</p>
+          <p className="tagline">Your music. Your intent. Verified.</p>
         </div>
       </header>
 
