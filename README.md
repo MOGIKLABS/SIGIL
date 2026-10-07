@@ -1,16 +1,43 @@
-# React + Vite
+# Sigil
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Your music. Your intent. Verified.**
 
-Currently, two official plugins are available:
+A hackathon prototype exploring consent and attribution checks for AI-generated music, anchored in the UK Copyright, Designs and Patents Act 1988.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Built by Mogik Labs 無極實驗室 at the Mozart AI hackathon, 2026.
 
-## React Compiler
+## Status
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Archived prototype. Kept as a record of the original concept. Not maintained and not production software.
 
-## Expanding the ESLint configuration
+## What it does
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. You describe a track in plain text.
+2. A language model reviews the description and returns a green, amber or red consent status with a short reason.
+3. Green and amber descriptions are sent on to generate audio. Red is blocked.
+4. The result is shown with a Sigil ID.
+
+## Known limits
+
+- It analyses the text description only. It does not analyse audio.
+- The Sigil ID is generated in the browser and is not stored anywhere.
+- API keys are read in the browser, so this must not be deployed publicly with real keys.
+- The legal basis line is model output, not legal advice.
+
+## Stack
+
+React 19, Vite, OpenAI API, ElevenLabs music API.
+
+## Run locally
+
+```bash
+npm install
+cp .env.example .env   # then add your own keys
+npm run dev
+```
+
+Requires `VITE_OPENAI_API_KEY` and `VITE_ELEVENLABS_API_KEY`.
+
+## Contact
+
+hello@mogiklabs.com · mogiklabs.com
